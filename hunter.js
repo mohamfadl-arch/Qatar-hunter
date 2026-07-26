@@ -3,11 +3,7 @@ void async function() {
   window._h = 1;
 
   const d = document,
-        m = new Map(),
-        proxies = [
-          'https://api.allorigins.win/raw?url=',
-          'https://corsproxy.io/?'
-        ];
+        m = new Map();
 
   let si, tab = 'all';
 
@@ -25,7 +21,6 @@ void async function() {
     try { sessionStorage.setItem('__hunter', JSON.stringify(arr)); } catch (e) {}
   }
 
-  // استخراج البيانات الوصفية (مدينة، سعر، غرف...)
   function extractMeta(text) {
     const tx = text.toLowerCase(), meta = {};
     const cityMatch = tx.match(/(الدوحة|الريان|الوكرة|أم صلال|الخور|الذخيرة|الشمال|الظعاين|اللؤلؤة|لوسيل|الدفنة|الوعب|الغرافة|الخريطيات|معيذر|أبو هامور|مسيمير|الوكير|الوكرة|روضة أقديم|روضة الخيل|بني هاجر|الغويرية|الجميلية|دخان)/i);
@@ -41,7 +36,6 @@ void async function() {
     return meta;
   }
 
-  // تصنيف النص
   function classify(text) {
     const tx = text.toLowerCase();
     if (/(مطلوب|أبحث عن|أرغب في|طلب\s+(شراء|إيجار|استئجار)|مستأجر يبحث|مشتري جاد)/i.test(tx)) return 'request';
@@ -60,7 +54,6 @@ void async function() {
     persist();
   }
 
-  // فحص الصفحة الحالية
   function scanLocal() {
     d.querySelectorAll('a').forEach(a => {
       const t = a.innerText.trim();
@@ -78,40 +71,6 @@ void async function() {
     });
   }
 
-  // جلب صفحة خارجية عبر وسيط CORS وتحليلها
-  async function fetchAndParse(url, sourceName) {
-    for (const proxy of proxies) {
-      try {
-        const response = await fetch(proxy + encodeURIComponent(url));
-        if (!response.ok) continue;
-        const html = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-
-        // استخراج الروابط
-        doc.querySelectorAll('a').forEach(a => {
-          const t = a.textContent.trim();
-          if (t.length > 4) add(a.href, t, classify(t));
-        });
-
-        // استخراج النصوص الشبيهة بالطلبات
-        doc.querySelectorAll('div, article, section, p, span').forEach(el => {
-          const t = el.textContent.trim();
-          if (t.length > 10 && /(مطلوب|أبحث عن|طلب شراء|طلب إيجار|مستأجر|مشتري)/i.test(t)) {
-            const key = sourceName + '_' + t.slice(0, 40);
-            if (!m.has(key)) {
-              const meta = extractMeta(t);
-              add('#', '🌐 ' + t.slice(0, 55), 'request', meta);
-            }
-          }
-        });
-        return; // نجاح، لا داعي لتجربة وسيط آخر
-      } catch (e) {}
-    }
-    console.warn('فشل جلب الصفحة عبر جميع الوسطاء:', url);
-  }
-
-  // مطابقة الطلبات مع العروض المشابهة
   function matchRequest(req) {
     const reqMeta = req.meta;
     if (!reqMeta || Object.keys(reqMeta).length === 0) return [];
@@ -130,7 +89,6 @@ void async function() {
     return matches.slice(0, 3);
   }
 
-  // تحديث العدادات
   function updateCounts() {
     let sc = 0, rc = 0, rq = 0;
     m.forEach(v => {
@@ -144,7 +102,6 @@ void async function() {
     treq.textContent = 'طلبات (' + rq + ')';
   }
 
-  // عرض النتائج في اللوحة
   function render() {
     ls.innerHTML = '';
     const q = si.value.trim().toLowerCase();
@@ -155,9 +112,8 @@ void async function() {
       filtered.push(v);
     });
     filtered.sort((a, b) => a.title.localeCompare(b.title));
-
     if (m.size === 0) {
-      ls.innerHTML = '<div style="color:#fbbf24;text-align:center;padding:20px;">⏳ جاري جلب البيانات من المصادر الخارجية…</div>';
+      ls.innerHTML = '<div style="color:#fbbf24;text-align:center;padding:20px;">لا توجد نتائج بعد. استخدم زر فيسبوك لفتح مجموعة العقارات.</div>';
     } else if (filtered.length === 0) {
       ls.innerHTML = '<div style="color:#fbbf24;text-align:center;padding:20px;">لا توجد نتائج تطابق بحثك.</div>';
     } else {
@@ -187,7 +143,7 @@ void async function() {
     updateCounts();
   }
 
-  // ----- بناء واجهة المستخدم -----
+  // ---------- بناء الواجهة ----------
   scanLocal();
 
   const w = d.createElement('div');
@@ -236,26 +192,54 @@ void async function() {
   const eb = d.createElement('button');
   eb.textContent = '📥 JSON';
   eb.style.cssText = 'background:#f59e0b;border:none;color:#fff;padding:6px;border-radius:6px;flex:1;';
-  btns.appendChild(eb);
+  const fbBtn = d.createElement('button');
+  fbBtn.textContent = '📘 فيسبوك عقارات';
+  fbBtn.style.cssText = 'background:#1877f2;border:none;color:#fff;padding:6px;border-radius:6px;flex:1;';
+  btns.append(eb, fbBtn);
   w.appendChild(btns);
 
   d.body.appendChild(w);
   updateCounts();
   render();
 
-  // ----- جلب المصادر الخارجية تلقائياً -----
-  fetchAndParse('https://www.qatarliving.com/requests', 'qatarLiving');
-  fetchAndParse('https://mbasic.facebook.com/groups/realestateqatar', 'facebookGroup');
+  // ---------- تحميل خارجي (آمن) ----------
+  async function safeFetch(url, sourceName) {
+    try {
+      const response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+      if (!response.ok) return;
+      const html = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      doc.querySelectorAll('a').forEach(a => {
+        const t = a.textContent.trim();
+        if (t.length > 4) add(a.href, t, classify(t));
+      });
+      doc.querySelectorAll('div, article, section, p, span').forEach(el => {
+        const t = el.textContent.trim();
+        if (t.length > 10 && /(مطلوب|أبحث عن|طلب شراء|طلب إيجار|مستأجر|مشتري)/i.test(t)) {
+          const key = sourceName + '_' + t.slice(0, 40);
+          if (!m.has(key)) {
+            const meta = extractMeta(t);
+            add('#', '🌐 ' + t.slice(0, 55), 'request', meta);
+          }
+        }
+      });
+      render();
+    } catch (e) {
+      console.log('تعذر جلب ' + sourceName);
+    }
+  }
 
-  // تحديث اللوحة عند انتهاء الجلب (كل 3 ثوانٍ لمدة 15 ثانية)
-  let checkCounter = 0;
-  const interval = setInterval(() => {
-    render();
-    checkCounter++;
-    if (checkCounter > 5) clearInterval(interval);
-  }, 3000);
+  // محاولة جلب Qatar Living في الخلفية
+  safeFetch('https://www.qatarliving.com/requests', 'qatarLiving');
 
-  // ----- أزرار التحكم -----
+  // زر فيسبوك
+  fbBtn.onclick = () => {
+    const fbUrl = 'https://mbasic.facebook.com/groups/realestateqatar';
+    window.open(fbUrl, '_blank');
+    alert('📘 افتح صفحة المجموعة ثم اضغط الإشارة المرجعية مرة أخرى لجمع المنشورات.');
+  };
+
   eb.onclick = () => {
     const data = [];
     m.forEach(v => data.push({ type: v.type, title: v.title, url: v.url, meta: v.meta }));
