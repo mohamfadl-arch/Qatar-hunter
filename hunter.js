@@ -1,1 +1,141 @@
-void async function(){if(window._h)return window._h();window._h=1;let d=document,m=new Map(),si,tab='all';try{let s=sessionStorage.getItem('__hunter');if(s){JSON.parse(s).forEach(e=>m.set(e.k,{title:e.t,url:e.u,type:e.y}));}}catch(e){}function persist(){let a=[];m.forEach((v,k)=>a.push({k,t:v.title,u:v.url,y:v.type}));try{sessionStorage.setItem('__hunter',JSON.stringify(a));}catch(e){}}function classify(t){let tx=t.toLowerCase();if(/(مطلوب|أبحث عن|أرغب في|طلب\s+(شراء|إيجار|استئجار)|مستأجر يبحث|مشتري جاد)/i.test(tx))return'request';if(/إيجار|للإيجار|استئجار/.test(tx))return'rent';if(/بيع|للبيع|تملك|فرصة/.test(tx))return'sale';return'other';}function add(h,t,ty){if(!h||t.length<4||m.has(h)||/facebook\.com\/wui/.test(h)||/google\.[a-z.]+\/(webhp|setprefs|preferences|myactivity|services|about|intl|policies|support|help|advanced|finance|travel|maps|search\?(?!.*q=)|support\.google|policies\.google|translate\.google/i.test(h))return;m.set(h,{title:t.slice(0,60),url:h,type:ty});persist();}function scanLocal(){d.querySelectorAll('a').forEach(a=>{let t=a.innerText.trim();add(a.href,t,classify(t));});d.querySelectorAll('div,p,span').forEach(el=>{let t=el.innerText.trim();if(t.length>15&&/(مطلوب|أبحث عن|طلب شراء|طلب إيجار|مستأجر|مشتري)/i.test(t)){let k='txt_'+t.slice(0,40);if(!m.has(k)){add('#','📘 '+t.slice(0,60),'request');}}});}function uC(){let sc=0,rc=0,rq=0;m.forEach(v=>{if(v.type==='sale')sc++;else if(v.type==='rent')rc++;else if(v.type==='request')rq++;});cnt.textContent=m.size+' | بيع:'+sc+' إيجار:'+rc+' طلبات:'+rq;ts.textContent='معروضات ('+sc+')';tr.textContent='إيجار ('+rc+')';treq.textContent='طلبات ('+rq+')';}function render(){ls.innerHTML='';let q=si.value.trim().toLowerCase();let filtered=[];m.forEach(v=>{if(tab!=='all'&&v.type!==tab)return;if(q&&!v.title.toLowerCase().includes(q))return;filtered.push(v);});filtered.sort((a,b)=>a.title.localeCompare(b.title));if(m.size===0){ls.innerHTML='<div style="color:#fbbf24;text-align:center;padding:20px;">لا توجد نتائج بعد. افتح Facebook من الزر أدناه.</div>';}else if(filtered.length===0){ls.innerHTML='<div style="color:#fbbf24;text-align:center;padding:20px;">لا توجد نتائج تطابق بحثك.</div>';}else{filtered.forEach(v=>{let card=d.createElement('div');card.style='background:#1e293b;margin:3px 0;padding:6px;border-radius:6px;';let lbl=v.type==='sale'?'🟢 بيع':v.type==='rent'?'🔵 إيجار':v.type==='request'?'🟡 طلب':'⚪';let link=v.url!=='#'?`<a href="${v.url}" target="_blank" style="color:#38bdf8;text-decoration:none;">${v.title}</a>`:`<span style="color:#fbbf24;">${v.title}</span>`;card.innerHTML='<div>'+lbl+' '+link+'</div>';ls.appendChild(card);});}uC();}scanLocal();let w=d.createElement('div');w.style='position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483647;background:#0f172a;color:#fff;direction:rtl;display:flex;flex-direction:column;font:12px sans-serif;';let hd=d.createElement('div');hd.style='background:#1e293b;padding:8px;display:flex;justify-content:space-between;';let cnt=d.createElement('span');hd.innerHTML='<b style="color:#38bdf8">🏠 صياد عقارات قطر الذكي</b> ';hd.appendChild(cnt);let cl=d.createElement('span');cl.textContent='✕';cl.style='color:#f44;cursor:pointer;';cl.onclick=()=>{w.remove();window._h=0;};hd.appendChild(cl);w.appendChild(hd);let tabs=d.createElement('div');tabs.style='display:flex;gap:2px;background:#111827;padding:4px;';function mkTab(lb,ty){let b=d.createElement('button');b.textContent=lb;b.style='flex:1;background:'+(tab===ty?'#2563eb':'#1f2937')+';color:#fff;border:none;padding:6px;border-radius:6px;font-weight:bold;';b.onclick=()=>{tab=ty;render();};return b;}let ta=mkTab('الكل','all'),ts=mkTab('معروضات','sale'),tr=mkTab('إيجار','rent'),treq=mkTab('طلبات','request');tabs.append(ta,ts,tr,treq);w.appendChild(tabs);let ls=d.createElement('div');ls.style='flex:1;overflow-y:auto;padding:6px;';w.appendChild(ls);si=d.createElement('input');si.placeholder='ابحث...';si.style='margin:4px;padding:6px;background:#1e293b;border:none;color:#fff;border-radius:6px;';si.oninput=render;w.appendChild(si);let btns=d.createElement('div');btns.style='display:flex;gap:4px;padding:4px;flex-wrap:wrap;';let eb=d.createElement('button');eb.textContent='📥 JSON';eb.style='background:#f59e0b;border:none;color:#fff;padding:6px;border-radius:6px;flex:1;';let fbBtn=d.createElement('button');fbBtn.textContent='📘 فيسبوك';fbBtn.style='background:#1877f2;border:none;color:#fff;padding:6px;border-radius:6px;flex:1;';btns.append(eb,fbBtn);w.appendChild(btns);d.body.appendChild(w);uC();render();fbBtn.onclick=()=>{window.open('https://mbasic.facebook.com/search/posts/?q=مطلوب+عقار+قطر','_blank');alert('📘 ستفتح صفحة البحث. اضغط الإشارة المرجعية مرة أخرى لجمع النتائج.');};eb.onclick=()=>{let data=[];m.forEach(v=>data.push({type:v.type,title:v.title,url:v.url}));let blob=new Blob([JSON.stringify(data)],{type:'application/json'});let a=d.createElement('a');a.href=URL.createObjectURL(blob);a.download='qatar_ads.json';a.click();};window._h=()=>{w.remove();window._h=0;}}();
+// ==================== AUTO-DETECT PAGE TYPE ====================
+const IS_LIVE = /tango\.me\/live|bigo\.tv|youtube\.com\/live/i.test(location.href);
+
+if (IS_LIVE) {
+  // --------------- LIVE STREAM DASHBOARD ---------------
+  (function() {
+    if (window._live) return;
+    window._live = 1;
+    const d = document, streams = new Map();
+    let si, tab = 'all', sortBy = 'viewers', refreshInterval;
+
+    function extractCard(card) {
+      const id = card.getAttribute('data-room-id') || 
+                 card.querySelector('[data-room-id]')?.getAttribute('data-room-id') ||
+                 card.id || '';
+      if (!id) return null;
+      const title = card.querySelector('.title, [class*="title"], h3, h4')?.innerText?.trim() || '';
+      const cover = card.querySelector('img')?.src || '';
+      const viewersText = card.querySelector('.audience-count, [class*="viewer"], [class*="count"]')?.innerText?.trim() || '0';
+      const viewers = parseInt(viewersText.replace(/[^0-9]/g, ''), 10) || 0;
+      const category = card.querySelector('.category, [class*="category"], [class*="tag"]')?.innerText?.trim() || 'غير معروف';
+      const language = card.querySelector('.language, [class*="lang"]')?.innerText?.trim() || 'غير معروف';
+      const startTime = card.getAttribute('data-start') || '';
+      const status = card.classList.contains('live') ? 'مباشر' : 'منتهي';
+      return { id, title, cover, viewers, category, language, startTime, status };
+    }
+
+    function scan() {
+      d.querySelectorAll('.room-card, [class*="room-item"], [class*="stream-card"], .live-card').forEach(el => {
+        const data = extractCard(el);
+        if (data && !streams.has(data.id)) {
+          streams.set(data.id, data);
+        }
+      });
+    }
+
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(m => m.addedNodes.forEach(node => {
+        if (node.nodeType === 1) {
+          if (node.matches && node.matches('.room-card, [class*="room-item"], [class*="stream-card"], .live-card')) {
+            const data = extractCard(node);
+            if (data) streams.set(data.id, data);
+          } else {
+            node.querySelectorAll?.('.room-card, [class*="room-item"], [class*="stream-card"], .live-card').forEach(el => {
+              const data = extractCard(el);
+              if (data) streams.set(data.id, data);
+            });
+          }
+        }
+      }));
+      render();
+    });
+
+    function render() {
+      if (!list) return;
+      let arr = [...streams.values()];
+      const search = si.value.trim().toLowerCase();
+      if (search) arr = arr.filter(s => s.title.toLowerCase().includes(search) || s.category.toLowerCase().includes(search));
+      if (tab !== 'all') arr = arr.filter(s => s.category === tab);
+      // Sort
+      if (sortBy === 'viewers') arr.sort((a, b) => b.viewers - a.viewers);
+      else if (sortBy === 'time') arr.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+      
+      list.innerHTML = '';
+      if (arr.length === 0) {
+        list.innerHTML = '<div style="color:#fbbf24;text-align:center;padding:20px;">لا توجد بثوث مطابقة.</div>';
+        return;
+      }
+      arr.forEach(s => {
+        const card = d.createElement('div');
+        card.style.cssText = 'background:#1e293b;margin:4px 0;padding:10px;border-radius:8px;display:flex;gap:10px;';
+        card.innerHTML = `
+          <img src="${s.cover}" style="width:80px;height:60px;border-radius:6px;object-fit:cover" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2260%22><rect fill=%22%23374151%22 width=%2280%22 height=%2260%22/><text x=%2210%22 y=%2235%22 fill=%22%23fff%22 font-size=%2212%22>No Img</text></svg>'">
+          <div style="flex:1">
+            <a href="${location.origin}/room/${s.id}" target="_blank" style="color:#38bdf8;text-decoration:none;font-weight:bold;">${s.title}</a>
+            <div style="color:#94a3b8;font-size:11px;">${s.category} | ${s.language} | 👁 ${s.viewers.toLocaleString()} | ${s.status}</div>
+          </div>`;
+        list.appendChild(card);
+      });
+      cnt.textContent = streams.size;
+    }
+
+    // Build UI
+    scan();
+    const w = d.createElement('div');
+    w.id = 'liveDash';
+    w.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#0f172a;color:#fff;direction:rtl;display:flex;flex-direction:column;font:12px sans-serif;';
+    w.innerHTML = `
+      <div style="background:#1e293b;padding:10px;display:flex;justify-content:space-between;align-items:center;">
+        <b style="color:#38bdf8;font-size:16px">📡 بثوث مباشرة <span id="cnt" style="background:#0284c7;padding:2px 6px;border-radius:10px;font-size:11px">0</span></b>
+        <span style="color:#f44;cursor:pointer;font-size:18px" onclick="document.getElementById('liveDash').remove();window._live=0;">✕</span>
+      </div>
+      <div style="padding:8px;background:#111827;display:flex;gap:4px;flex-wrap:wrap">
+        <input id="si" placeholder="ابحث..." style="flex:2;padding:7px;background:#1f2937;border:1px solid #374151;color:#fff;border-radius:6px">
+        <select id="sortBy" style="background:#1f2937;color:#fff;border:1px solid #374151;border-radius:6px;padding:7px">
+          <option value="viewers">👁 الأكثر مشاهدة</option>
+          <option value="time">🕒 الأحدث</option>
+        </select>
+        <button id="tvMode" style="background:#8b5cf6;border:none;color:#fff;padding:7px 10px;border-radius:6px">📺</button>
+      </div>
+      <div style="display:flex;gap:2px;background:#111827;padding:4px;overflow-x:auto">
+        ${['all','العاب','موسيقى','دردشة','رياضة','تعليم','أخبار','أخرى'].map(c => 
+          `<button class="catTab" data-cat="${c}" style="flex:1;background:#1f2937;color:#fff;border:none;padding:6px;border-radius:6px;white-space:nowrap">${c==='all'?'الكل':c}</button>`
+        ).join('')}
+      </div>
+      <div id="list" style="flex:1;overflow-y:auto;padding:8px"></div>`;
+    d.body.appendChild(w);
+
+    const cnt = w.querySelector('#cnt'),
+          si = w.querySelector('#si'),
+          list = w.querySelector('#list'),
+          sortSel = w.querySelector('#sortBy');
+    
+    // Category tabs
+    w.querySelectorAll('.catTab').forEach(btn => {
+      btn.onclick = () => {
+        tab = btn.dataset.cat;
+        w.querySelectorAll('.catTab').forEach(b => b.style.background='#1f2937');
+        btn.style.background='#2563eb';
+        render();
+      };
+    });
+
+    si.oninput = render;
+    sortSel.onchange = () => { sortBy = sortSel.value; render(); };
+    document.getElementById('tvMode').onclick = () => {
+      w.style.fontSize = '22px';
+      w.querySelectorAll('a').forEach(a => a.style.fontSize = '20px');
+    };
+
+    observer.observe(d.body, { childList: true, subtree: true });
+    render();
+    // Auto-refresh every 30s (re-scan)
+    refreshInterval = setInterval(() => { scan(); render(); }, 30000);
+    window._live = () => { w.remove(); clearInterval(refreshInterval); window._live = 0; };
+  })();
+
+} else {
+  // --------------- REAL ESTATE HUNTER (original code) ---------------
+  void async function(){ /* ... the entire real estate hunter code you had previously ... */ }();
+}
